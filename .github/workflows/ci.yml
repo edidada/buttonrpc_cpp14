@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    name: build (${{ matrix.compiler }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [ gcc, clang ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libzmq3-dev cppzmq-dev
+          if [ "${{ matrix.compiler }}" = "clang" ]; then
+            sudo apt-get install -y clang
+          fi
+
+      - name: Configure
+        run: |
+          if [ "${{ matrix.compiler }}" = "clang" ]; then
+            export CC=clang CXX=clang++
+          else
+            export CC=gcc CXX=g++
+          fi
+          cmake -S example -B build -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Smoke test
+        run: |
+          ./build/main_server &
+          SRV_PID=$!
+          sleep 1
+          timeout 5 ./build/main_client > client.log 2>&1 || true
+          kill $SRV_PID 2>/dev/null || true
+          if ! grep -q "current call count" client.log; then
+            cat client.log
+            exit 1
+          fi
+          if grep -q "ERROR" client.log; then
+            cat client.log
+            exit 1
+          fi
+          head -3 client.log

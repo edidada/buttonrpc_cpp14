@@ -1,5 +1,8 @@
 
 # buttonrpc - modern rpc framework for C++
+
+[![CI](https://github.com/edidada/buttonrpc_cpp14/actions/workflows/ci.yml/badge.svg)](https://github.com/edidada/buttonrpc_cpp14/actions/workflows/ci.yml)
+
 - ZeroMQ 作为网络层
 - 使用c++14开发
 
@@ -58,6 +61,9 @@ int main()
 
 ## Building
 - windows vs2015 或者更高版本,  linux 添加编译选项：-std=c++1z
+
+## CI (GitHub Actions)
+- 每次 push / pull request 到 `master` 分支时，自动在 `ubuntu-24.04` 上使用 gcc / clang 编译并冒烟测试 `example/` 下的代码，工作流配置见 [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 
 ## Usage
 
